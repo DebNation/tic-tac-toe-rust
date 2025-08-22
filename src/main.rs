@@ -1,4 +1,5 @@
 use colored::*;
+use rand::prelude::*;
 use std::io::{self};
 
 fn draw_box(box_numbers: &[String]) {
@@ -78,21 +79,14 @@ fn check_winner(box_numbers: &[String]) -> bool {
 }
 
 fn check_box_filled(box_numbers: &[String]) -> bool {
-    if box_numbers.contains(&"0".to_string())
-        || box_numbers.contains(&"1".to_string())
-        || box_numbers.contains(&"2".to_string())
-        || box_numbers.contains(&"3".to_string())
-        || box_numbers.contains(&"4".to_string())
-        || box_numbers.contains(&"5".to_string())
-        || box_numbers.contains(&"6".to_string())
-        || box_numbers.contains(&"7".to_string())
-        || box_numbers.contains(&"8".to_string())
-    {
-        return true;
+    for number in box_numbers {
+        match number.as_str() {
+            "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" => return true,
+            _ => return false,
+        }
     }
     return false;
 }
-use rand::prelude::*;
 fn main() {
     let mut rng = rand::rng();
     let mut nums: Vec<u8> = (0..9).collect();
