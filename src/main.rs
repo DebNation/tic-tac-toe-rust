@@ -4,7 +4,7 @@ use kira::{
 };
 use rand::prelude::*;
 use std::{
-    io::{self},
+    io::{self, ErrorKind},
     time::Duration,
 };
 
@@ -149,7 +149,10 @@ fn player_x(box_numbers: &mut [String], is_player_won: &mut bool) {
         // manager.play(enter_x_audio.clone()).unwrap();
         let mut input: String = String::new();
         io::stdin().read_line(&mut input).unwrap();
-        let parsed_input: u32 = input.trim().parse().expect("failed to parse the input");
+        let parsed_input: u32 = match input.trim().parse() {
+            Ok(val) => val,
+            Err(_) => continue,
+        };
 
         if parsed_input > 8 {
             println!("You have entered an invalid number!");
@@ -191,7 +194,10 @@ fn player_y(box_numbers: &mut [String], is_player_won: &mut bool) {
         // manager.play(enter_y_audio.clone()).unwrap();
         let mut input: String = String::new();
         io::stdin().read_line(&mut input).unwrap();
-        let parsed_input: u32 = input.trim().parse().expect("failed to parse the input");
+        let parsed_input: u32 = match input.trim().parse() {
+            Ok(val) => val,
+            Err(_) => continue,
+        };
 
         if parsed_input > 8 {
             println!("You have entered an invalid number!");
