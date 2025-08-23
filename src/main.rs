@@ -4,8 +4,8 @@ use kira::{
 };
 use rand::prelude::*;
 use std::{
-    io::{self, ErrorKind},
-    time::Duration,
+    io::{self},
+    time::{Duration, Instant},
 };
 
 fn draw_box(box_numbers: &[String]) {
@@ -137,16 +137,28 @@ fn main() {
 }
 
 fn player_x(box_numbers: &mut [String], is_player_won: &mut bool) {
+    let start_time = Instant::now();
     let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
-    // let enter_x_audio = StaticSoundData::from_file("assets/player_x_enter.mp3").unwrap();
+    let enter_x_audio = StaticSoundData::from_file("assets/player_x_enter.mp3").unwrap();
+    let timeout = StaticSoundData::from_file("assets/timeout.mp3").unwrap();
     let winner_x = StaticSoundData::from_file("assets/winner_x.mp3").unwrap();
     while is_any_number_left(&box_numbers) == true {
         clearscreen::clear().expect("failed to clear screen");
         draw_box(&box_numbers);
 
-        println!("{}", format!("Player X: Enter a number: ").italic());
-        // std::thread::sleep(Duration::from_secs(1));
-        // manager.play(enter_x_audio.clone()).unwrap();
+        println!("{}", format!("Player X, Enter a number: ").italic());
+
+        std::thread::sleep(Duration::from_secs(10));
+        let end_time = start_time.elapsed().as_secs();
+        if end_time == 10 {
+            manager.play(enter_x_audio.clone()).unwrap();
+            std::thread::sleep(Duration::from_secs(10));
+
+            manager.play(timeout.clone()).unwrap();
+            std::thread::sleep(Duration::from_secs(1));
+            break;
+        }
+
         let mut input: String = String::new();
         io::stdin().read_line(&mut input).unwrap();
         let parsed_input: u32 = match input.trim().parse() {
@@ -182,16 +194,27 @@ fn player_x(box_numbers: &mut [String], is_player_won: &mut bool) {
 }
 
 fn player_y(box_numbers: &mut [String], is_player_won: &mut bool) {
+    let start_time = Instant::now();
     let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
-    // let enter_y_audio = StaticSoundData::from_file("assets/player_y_enter.mp3").unwrap();
+    let enter_y_audio = StaticSoundData::from_file("assets/player_y_enter.mp3").unwrap();
+    let timeout = StaticSoundData::from_file("assets/timeout.mp3").unwrap();
     let winner_y = StaticSoundData::from_file("assets/winner_y.mp3").unwrap();
     while is_any_number_left(&box_numbers) == true {
         clearscreen::clear().expect("failed to clear screen");
         draw_box(&box_numbers);
 
-        println!("{}", format!("Player Y: Enter a number: ").italic());
-        // std::thread::sleep(Duration::from_secs(1));
-        // manager.play(enter_y_audio.clone()).unwrap();
+        println!("{}", format!("Player Y, Enter a number: ").italic());
+
+        std::thread::sleep(Duration::from_secs(10));
+        let end_time = start_time.elapsed().as_secs();
+        if end_time == 10 {
+            manager.play(enter_y_audio.clone()).unwrap();
+            std::thread::sleep(Duration::from_secs(10));
+
+            manager.play(timeout.clone()).unwrap();
+            std::thread::sleep(Duration::from_secs(1));
+            break;
+        }
         let mut input: String = String::new();
         io::stdin().read_line(&mut input).unwrap();
         let parsed_input: u32 = match input.trim().parse() {
