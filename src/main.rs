@@ -3,10 +3,8 @@ use kira::{
     AudioManager, AudioManagerSettings, DefaultBackend, sound::static_sound::StaticSoundData,
 };
 use rand::prelude::*;
-use std::{
-    io::{self},
-    time::{Duration, Instant},
-};
+use std::time::Duration;
+mod utils;
 
 fn draw_box(box_numbers: &[String]) {
     for number in 0..box_numbers.len() {
@@ -107,16 +105,32 @@ fn main() {
     let mut box_numbers: Vec<String> = nums.iter().map(|num| num.to_string()).collect();
     let mut is_player_won = false;
 
-    while is_any_number_left(&box_numbers) == true {
-        player_x(&mut box_numbers, &mut is_player_won);
-        if is_player_won || !is_any_number_left(&box_numbers) {
-            break;
-        }
+    let mut players_array = ["x", "y"];
+    players_array.shuffle(&mut rng);
 
-        player_y(&mut box_numbers, &mut is_player_won);
-        println!("{}", is_any_number_left(&box_numbers));
-        if is_player_won || !is_any_number_left(&box_numbers) {
-            break;
+    while is_any_number_left(&box_numbers) == true {
+        if players_array[0] == "x" {
+            player_x(&mut box_numbers, &mut is_player_won);
+            if is_player_won || !is_any_number_left(&box_numbers) {
+                break;
+            }
+
+            player_y(&mut box_numbers, &mut is_player_won);
+            println!("{}", is_any_number_left(&box_numbers));
+            if is_player_won || !is_any_number_left(&box_numbers) {
+                break;
+            }
+        } else {
+            player_y(&mut box_numbers, &mut is_player_won);
+            println!("{}", is_any_number_left(&box_numbers));
+            if is_player_won || !is_any_number_left(&box_numbers) {
+                break;
+            }
+
+            player_x(&mut box_numbers, &mut is_player_won);
+            if is_player_won || !is_any_number_left(&box_numbers) {
+                break;
+            }
         }
     }
     if is_any_number_left(&box_numbers) == false && is_player_won == false {
@@ -137,31 +151,17 @@ fn main() {
 }
 
 fn player_x(box_numbers: &mut [String], is_player_won: &mut bool) {
-    let start_time = Instant::now();
     let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
-    let enter_x_audio = StaticSoundData::from_file("assets/player_x_enter.mp3").unwrap();
-    let timeout = StaticSoundData::from_file("assets/timeout.mp3").unwrap();
     let winner_x = StaticSoundData::from_file("assets/winner_x.mp3").unwrap();
     while is_any_number_left(&box_numbers) == true {
         clearscreen::clear().expect("failed to clear screen");
         draw_box(&box_numbers);
+        let user_input: String = match utils::threaded_x_input() {
+            Some(input) => input,
+            _ => break,
+        };
 
-        println!("{}", format!("Player X, Enter a number: ").italic());
-
-        std::thread::sleep(Duration::from_secs(10));
-        let end_time = start_time.elapsed().as_secs();
-        if end_time == 10 {
-            manager.play(enter_x_audio.clone()).unwrap();
-            std::thread::sleep(Duration::from_secs(10));
-
-            manager.play(timeout.clone()).unwrap();
-            std::thread::sleep(Duration::from_secs(1));
-            break;
-        }
-
-        let mut input: String = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let parsed_input: u32 = match input.trim().parse() {
+        let parsed_input: u32 = match user_input.trim().parse() {
             Ok(val) => val,
             Err(_) => continue,
         };
@@ -171,7 +171,7 @@ fn player_x(box_numbers: &mut [String], is_player_won: &mut bool) {
             continue;
         }
 
-        match box_numbers.iter().position(|i| i == input.trim()) {
+        match box_numbers.iter().position(|i| i == user_input.trim()) {
             Some(index) => box_numbers[index] = "X".to_string(),
             None => {
                 println!("Entered number place is already taken!");
@@ -194,30 +194,17 @@ fn player_x(box_numbers: &mut [String], is_player_won: &mut bool) {
 }
 
 fn player_y(box_numbers: &mut [String], is_player_won: &mut bool) {
-    let start_time = Instant::now();
     let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
-    let enter_y_audio = StaticSoundData::from_file("assets/player_y_enter.mp3").unwrap();
-    let timeout = StaticSoundData::from_file("assets/timeout.mp3").unwrap();
     let winner_y = StaticSoundData::from_file("assets/winner_y.mp3").unwrap();
     while is_any_number_left(&box_numbers) == true {
         clearscreen::clear().expect("failed to clear screen");
         draw_box(&box_numbers);
 
-        println!("{}", format!("Player Y, Enter a number: ").italic());
-
-        std::thread::sleep(Duration::from_secs(10));
-        let end_time = start_time.elapsed().as_secs();
-        if end_time == 10 {
-            manager.play(enter_y_audio.clone()).unwrap();
-            std::thread::sleep(Duration::from_secs(10));
-
-            manager.play(timeout.clone()).unwrap();
-            std::thread::sleep(Duration::from_secs(1));
-            break;
-        }
-        let mut input: String = String::new();
-        io::stdin().read_line(&mut input).unwrap();
-        let parsed_input: u32 = match input.trim().parse() {
+        let user_input: String = match utils::threaded_y_input() {
+            Some(input) => input,
+            _ => break,
+        };
+        let parsed_input: u32 = match user_input.trim().parse() {
             Ok(val) => val,
             Err(_) => continue,
         };
@@ -227,7 +214,7 @@ fn player_y(box_numbers: &mut [String], is_player_won: &mut bool) {
             continue;
         }
 
-        match box_numbers.iter().position(|i| i == input.trim()) {
+        match box_numbers.iter().position(|i| i == user_input.trim()) {
             Some(index) => box_numbers[index] = "Y".to_string(),
             None => {
                 println!("Entered number place is already taken!");
