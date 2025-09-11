@@ -1,2 +1,8 @@
-1. add time limit for players
-2. shuffle first mover player
+```
+cargo run
+```
+
+or
+```
+cargo b --release && ./target/release/tic-tac-toe
+```
