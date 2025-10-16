@@ -1,7 +1,4 @@
 use colored::*;
-use kira::{
-    AudioManager, AudioManagerSettings, DefaultBackend, sound::static_sound::StaticSoundData,
-};
 use rand::prelude::*;
 use std::time::Duration;
 mod utils;
@@ -104,39 +101,38 @@ fn main() {
     nums.shuffle(&mut rng);
     let mut box_numbers: Vec<String> = nums.iter().map(|num| num.to_string()).collect();
     let mut is_player_won = false;
+    let mut is_player_x_afk = false;
+    let mut is_player_y_afk = false;
 
     let mut players_array = ["x", "y"];
     players_array.shuffle(&mut rng);
 
     while is_any_number_left(&box_numbers) == true {
         if players_array[0] == "x" {
-            player_x(&mut box_numbers, &mut is_player_won);
+            player_x(&mut box_numbers, &mut is_player_won, &mut is_player_x_afk);
             if is_player_won || !is_any_number_left(&box_numbers) {
                 break;
             }
 
-            player_y(&mut box_numbers, &mut is_player_won);
-            println!("{}", is_any_number_left(&box_numbers));
+            player_y(&mut box_numbers, &mut is_player_won, &mut is_player_y_afk);
+            // println!("{}", is_any_number_left(&box_numbers));
             if is_player_won || !is_any_number_left(&box_numbers) {
                 break;
             }
         } else {
-            player_y(&mut box_numbers, &mut is_player_won);
-            println!("{}", is_any_number_left(&box_numbers));
+            player_y(&mut box_numbers, &mut is_player_won, &mut is_player_y_afk);
+            // println!("{}", is_any_number_left(&box_numbers));
             if is_player_won || !is_any_number_left(&box_numbers) {
                 break;
             }
 
-            player_x(&mut box_numbers, &mut is_player_won);
+            player_x(&mut box_numbers, &mut is_player_won, &mut is_player_x_afk);
             if is_player_won || !is_any_number_left(&box_numbers) {
                 break;
             }
         }
     }
     if is_any_number_left(&box_numbers) == false && is_player_won == false {
-        let mut manager =
-            AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
-        let draw_audio = StaticSoundData::from_file("assets/draw.mp3").unwrap();
         clearscreen::clear().expect("failed to clear screen");
         draw_box(&box_numbers);
 
@@ -145,18 +141,19 @@ fn main() {
             format!("It's a Draw!").white().on_black().bold().italic()
         );
 
-        manager.play(draw_audio.clone()).unwrap();
+        utils::play_audio("assets/draw.mp3");
         std::thread::sleep(Duration::from_secs(2));
+    }
+    if is_player_y_afk && is_player_x_afk {
+        panic!("AFK DETECTED!")
     }
 }
 
-fn player_x(box_numbers: &mut [String], is_player_won: &mut bool) {
-    let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
-    let winner_x = StaticSoundData::from_file("assets/winner_x.mp3").unwrap();
+fn player_x(box_numbers: &mut [String], is_player_won: &mut bool, is_player_x_afk: &mut bool) {
     while is_any_number_left(&box_numbers) == true {
         clearscreen::clear().expect("failed to clear screen");
         draw_box(&box_numbers);
-        let user_input: String = match utils::threaded_x_input() {
+        let user_input: String = match utils::threaded_x_input(is_player_x_afk) {
             Some(input) => input,
             _ => break,
         };
@@ -184,7 +181,7 @@ fn player_x(box_numbers: &mut [String], is_player_won: &mut bool) {
             draw_box(&box_numbers);
             println!("{}", format!("Winner: PLayer X!").red().bold().italic());
             // std::thread::sleep(Duration::from_secs(1));
-            manager.play(winner_x.clone()).unwrap();
+            utils::play_audio("assets/winner_x.mp3");
             *is_player_won = true;
             std::thread::sleep(Duration::from_secs(2));
             break;
@@ -193,14 +190,12 @@ fn player_x(box_numbers: &mut [String], is_player_won: &mut bool) {
     }
 }
 
-fn player_y(box_numbers: &mut [String], is_player_won: &mut bool) {
-    let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
-    let winner_y = StaticSoundData::from_file("assets/winner_y.mp3").unwrap();
+fn player_y(box_numbers: &mut [String], is_player_won: &mut bool, is_player_y_afk: &mut bool) {
     while is_any_number_left(&box_numbers) == true {
         clearscreen::clear().expect("failed to clear screen");
         draw_box(&box_numbers);
 
-        let user_input: String = match utils::threaded_y_input() {
+        let user_input: String = match utils::threaded_y_input(is_player_y_afk) {
             Some(input) => input,
             _ => break,
         };
@@ -228,7 +223,7 @@ fn player_y(box_numbers: &mut [String], is_player_won: &mut bool) {
             println!("{}", format!("Winner: PLayer Y!").blue().bold().italic());
 
             // std::thread::sleep(Duration::from_secs(1));
-            manager.play(winner_y.clone()).unwrap();
+            utils::play_audio("assets/winner_y.mp3");
             *is_player_won = true;
             std::thread::sleep(Duration::from_secs(2));
             break;

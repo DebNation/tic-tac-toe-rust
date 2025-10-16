@@ -1,13 +1,7 @@
 use colored::*;
-use kira::{
-    AudioManager, AudioManagerSettings, DefaultBackend, sound::static_sound::StaticSoundData,
-};
 use std::{io::stdin, sync::mpsc, thread, time::Duration};
 
-pub fn threaded_x_input() -> Option<String> {
-    let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
-    let enter_x_audio = StaticSoundData::from_file("assets/player_x_enter.mp3").unwrap();
-    let timeout_audio = StaticSoundData::from_file("assets/timeout.mp3").unwrap();
+pub fn threaded_x_input(is_player_x_afk: &mut bool) -> Option<String> {
     let (sender, receiver) = mpsc::channel::<String>();
 
     let input_sender_fn = move || {
@@ -25,7 +19,7 @@ pub fn threaded_x_input() -> Option<String> {
             return Some(input);
         }
         Err(mpsc::RecvTimeoutError::Timeout) => {
-            manager.play(enter_x_audio.clone()).unwrap();
+            play_audio("assets/player_x_enter.mp3");
             thread::sleep(Duration::from_secs(2));
         }
         Err(_) => return None,
@@ -34,17 +28,15 @@ pub fn threaded_x_input() -> Option<String> {
     match receiver.recv_timeout(Duration::from_secs(5)) {
         Ok(input) => return Some(input),
         Err(_) => {
-            manager.play(timeout_audio).unwrap();
+            play_audio("assets/timeout.mp3");
             thread::sleep(Duration::from_secs(1));
+            *is_player_x_afk = true;
             return None;
         }
     };
 }
 
-pub fn threaded_y_input() -> Option<String> {
-    let mut manager = AudioManager::<DefaultBackend>::new(AudioManagerSettings::default()).unwrap();
-    let enter_y_audio = StaticSoundData::from_file("assets/player_y_enter.mp3").unwrap();
-    let timeout_audio = StaticSoundData::from_file("assets/timeout.mp3").unwrap();
+pub fn threaded_y_input(is_player_y_afk: &mut bool) -> Option<String> {
     let (sender, receiver) = mpsc::channel::<String>();
 
     let input_sender_fn = move || {
@@ -62,7 +54,7 @@ pub fn threaded_y_input() -> Option<String> {
             return Some(input);
         }
         Err(mpsc::RecvTimeoutError::Timeout) => {
-            manager.play(enter_y_audio.clone()).unwrap();
+            play_audio("assets/player_y_enter.mp3");
             thread::sleep(Duration::from_secs(2));
         }
         Err(_) => return None,
@@ -71,9 +63,18 @@ pub fn threaded_y_input() -> Option<String> {
     match receiver.recv_timeout(Duration::from_secs(5)) {
         Ok(input) => return Some(input),
         Err(_) => {
-            manager.play(timeout_audio).unwrap();
+            play_audio("assets/timeout_audio.mp3");
             thread::sleep(Duration::from_secs(1));
+            *is_player_y_afk = true;
             return None;
         }
     };
+}
+
+pub fn play_audio(audio_path: &str) {
+    std::process::Command::new("mpv")
+        .arg("--ao=pulse")
+        .arg(audio_path)
+        .output()
+        .expect("mpv is not found");
 }
