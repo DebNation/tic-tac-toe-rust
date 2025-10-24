@@ -1,3 +1,4 @@
+### Usage
 ```
 cargo run
 ```
